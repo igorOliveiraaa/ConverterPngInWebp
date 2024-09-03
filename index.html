@@ -22,7 +22,11 @@
             cursor: pointer;
         }
 
-        #downloadLink {
+        #downloadsContainer {
+            margin-top: 20px;
+        }
+
+        .downloadLink {
             display: block;
             margin-top: 10px;
             font-size: 16px;
@@ -31,44 +35,50 @@
 </head>
 <body>
     <h1>Converter PNG para WebP</h1>
-    <input type="file" id="fileInput" accept="image/png">
+    <input type="file" id="fileInput" accept="image/png" multiple>
     <button id="convertButton">Converter e Baixar</button>
-    <a id="downloadLink" style="display: none;">Baixar WebP</a>
+    <div id="downloadsContainer"></div>
     
     <script>
         document.getElementById('convertButton').addEventListener('click', function() {
             const fileInput = document.getElementById('fileInput');
-            const file = fileInput.files[0];
+            const files = fileInput.files;
             
-            if (!file) {
-                alert('Por favor, selecione um arquivo PNG.');
+            if (files.length === 0) {
+                alert('Por favor, selecione pelo menos um arquivo PNG.');
                 return;
             }
-            
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                const img = new Image();
-                img.src = event.target.result;
-                img.onload = function() {
-                    const canvas = document.createElement('canvas');
-                    const ctx = canvas.getContext('2d');
-                    
-                    canvas.width = img.width;
-                    canvas.height = img.height;
-                    ctx.drawImage(img, 0, 0);
-                    
-                    canvas.toBlob(function(blob) {
-                        const url = URL.createObjectURL(blob);
-                        const downloadLink = document.getElementById('downloadLink');
-                        downloadLink.href = url;
-                        downloadLink.download = 'converted.webp';
-                        downloadLink.textContent = 'Baixar WebP';
-                        downloadLink.style.display = 'block';
-                    }, 'image/webp');
+
+            const downloadsContainer = document.getElementById('downloadsContainer');
+            downloadsContainer.innerHTML = '';
+
+            Array.from(files).forEach(file => {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const img = new Image();
+                    img.src = event.target.result;
+                    img.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+                        
+                        canvas.width = img.width;
+                        canvas.height = img.height;
+                        ctx.drawImage(img, 0, 0);
+                        
+                        canvas.toBlob(function(blob) {
+                            const url = URL.createObjectURL(blob);
+                            const downloadLink = document.createElement('a');
+                            downloadLink.href = url;
+                            downloadLink.download = file.name.replace(/\.png$/, '.webp');
+                            downloadLink.textContent = `Baixar ${downloadLink.download}`;
+                            downloadLink.className = 'downloadLink';
+                            downloadsContainer.appendChild(downloadLink);
+                        }, 'image/webp');
+                    };
                 };
-            };
-            
-            reader.readAsDataURL(file);
+                
+                reader.readAsDataURL(file);
+            });
         });
     </script>
 </body>
